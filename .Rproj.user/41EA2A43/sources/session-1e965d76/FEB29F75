@@ -1,0 +1,26 @@
+{
+    "id": "FEB29F75",
+    "path": "~/PostDoc/BENSDF/Read_Levels.R",
+    "project_path": "Read_Levels.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1705164034419.0,
+    "source_on_save": false,
+    "relative_order": 4,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "152,0",
+        "scrollLine": "130"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1705165067,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1705165067361,
+    "read_only": false,
+    "read_only_alternatives": []
+}
