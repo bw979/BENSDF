@@ -77,7 +77,7 @@ for(i in 1:length(Evals)){
 GHists <- tibble(
   Emids = Emids,
   data = list(
-    tibble(w=double(1), x=double(1), y=double(1), z=double(1))
+    tibble(wx=double(1), wy=double(1), x=double(1), y=double(1), z=double(1))
     #tibble(w=NULL, x=NULL, y=NULL, z=NULL)
   ),
   fit = list(
@@ -92,8 +92,10 @@ while(i < length(Evals)){
     G <- filter(Gammas, Egam >= Evals_invLog[i] , Egam < Evals_invLog[i+1], Mult_Single == TYPE) %>%
       mutate(log_B = log(B))
     #K <- 2
+    Bwidths <- (max(G$log_B) - min(G$log_B))/K
+    
     GH <- hist(G$log_B, breaks = K)
-    GHists$data[[i]] <-  tibble(w=widths[i], x=Emids[i], y=GH$mids, z=GH$counts)
+    GHists$data[[i]] <-  tibble(wx=widths[i], wy=Bwidths, x=Emids[i], y=GH$mids, z=GH$counts)
     
     ## Add fitted gauss data
     a <- c(max(GH$counts), mean(G$log_B), sd(G$log_B))
@@ -103,11 +105,11 @@ while(i < length(Evals)){
 }
 
 # Define a function to add 3D bars
-add_3Dbar <- function(p, x,y,z, width) {
-  w <- width
+add_3Dbar <- function(p, x,y,z, wx, wy) {
+  # w <- width
   add_trace(p, type="mesh3d",
-            x = c(x-w, x-w, x+w, x+w, x-w, x-w, x+w, x+w),
-            y = c(y-w, y+w, y+w, y-w, y-w, y+w, y+w, y-w),
+            x = c(x-wx, x-wx, x+wx, x+wx, x-wx, x-wx, x+wx, x+wx),
+            y = c(y-wy, y+wy, y+wy, y-wy, y-wy, y+wy, y+wy, y-wy),
             z = c(0, 0, 0, 0, z, z, z, z),
             i = c(7, 0, 0, 0, 4, 4, 2, 6, 4, 0, 3, 7),
             j = c(3, 4, 1, 2, 5, 6, 5, 5, 0, 1, 2, 2),
@@ -137,7 +139,8 @@ for(i in 1:length(Emids)){
     fig <- fig %>% add_3Dbar(GHists$data[[i]]$x[j], 
                              GHists$data[[i]]$y[j], 
                              GHists$data[[i]]$z[j], 
-                             GHists$data[[i]]$w[j])
+                             GHists$data[[i]]$wx[j],
+                             GHists$data[[i]]$wy[j])
   }
 }
 
