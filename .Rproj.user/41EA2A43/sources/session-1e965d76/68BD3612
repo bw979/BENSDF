@@ -1,26 +1,26 @@
 {
-    "id": "A8F3CA30",
-    "path": "~/PostDoc/BENSDF/B_Value_Predictor_Ln_NormalDist.R",
-    "project_path": "B_Value_Predictor_Ln_NormalDist.R",
+    "id": "68BD3612",
+    "path": "~/PostDoc/BENSDF/B_Value_Predictor.R",
+    "project_path": "B_Value_Predictor.R",
     "type": "r_source",
     "hash": "0",
     "contents": "",
     "dirty": false,
-    "created": 1705166345737.0,
+    "created": 1705357621686.0,
     "source_on_save": false,
-    "relative_order": 3,
+    "relative_order": 9,
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "101,14",
-        "scrollLine": "82"
+        "cursorPosition": "163,0",
+        "scrollLine": "42"
     },
     "folds": "",
-    "lastKnownWriteTime": 1705357606,
+    "lastKnownWriteTime": 1705355263,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1705357606246,
+    "last_content_update": 1705355263,
     "read_only": false,
     "read_only_alternatives": []
 }

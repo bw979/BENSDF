@@ -45,13 +45,13 @@ server <- function(input, output) {
   # })
   
   Gammas_E <- filter(Gammas, Mult_Single == TYPE) %>%
-    mutate(log_B = log10(B))
+    mutate(log_B = log(B))
   
   
   # ## plot on a log x axis
   # p1 <- plot_ly(Gammas_E, x = ~Egam, y = ~B, type = 'scatter', showlegend=F) %>%
-  #   layout(yaxis = list(type="log", title = TeX("B Value, Weisskopf units"), exponentformat='E', tick0=floor(log10(min(Gammas_E$B))),
-  #                       dtick=log10(1E1)), #range=c(log10(0),log10(15))),
+  #   layout(yaxis = list(type="log", title = TeX("B Value, Weisskopf units"), exponentformat='E', tick0=floor(log(min(Gammas_E$B))),
+  #                       dtick=log(1E1)), #range=c(log(0),log(15))),
   #          xaxis = list( type="log", tickangle = -45, title="Gamma Energy keV")) %>%
   #   config(mathjax = "cdn") #%>%
   # p1
@@ -104,7 +104,7 @@ server <- function(input, output) {
   while(i < length(Evals)){ 
     #i<-3
     G <- filter(Gammas, Egam >= Evals_invLog[i] , Egam < Evals_invLog[i+1], Mult_Single == TYPE) %>%
-      mutate(log_B = log10(B))
+      mutate(log_B = log(B))
     #K <- 2
     GH <- hist(G$log_B, breaks = K)
     
