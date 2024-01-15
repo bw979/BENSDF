@@ -13,36 +13,19 @@ Gauss <- function(a, x) { return(a[1]*exp((-(x-a[2])^2)/a[3])) }
 ### Fitting function for a single GHist tibble
 fit_gauss <- function(counts, log_Bvals, Bmids){
   a <- c(max(counts),mean(log_Bvals), sd(log_Bvals))
-  #xvals <- GH$mids
-
-  ## Gaussian function based on mean and sd of log_B data
-
-  # ## compare chisq for gaussian fit with this histogram with a certain number of bins
-  # chisq0 <- function(a, Num_bins) { 
-  #   h2 <- hist(log_Bvals, breaks=Num_bins, plot=FALSE)
-  #   return(sum((h2$counts - Gauss(a, x))^2/GHist$counts)) 
-  # }
-  # 
-  # ## goodness of fit function 
-  # Gof <- function(Num_bins){ 
-  # chisq <- chisq0(a, Num_bins)
-  # return(chisq / (Num_bins - length(a))) }
-  # 
-  # Res <- optim(K, Gof)
-
   #Counts <- GHist$counts
   chisq1 <- function(vals) {return(sum((counts - Gauss(vals, x))^2/counts))}
-  r1 <- optim(c(1,1,1), chisq1, hessian=TRUE)
+  r1 <- optim(a, chisq1, hessian=TRUE)
   return(r1)
 }
 
+## Filtering
 TYPE <- "M1"
-
 Gammas_E <- filter(Gammas, Mult_Single == TYPE) %>%
    mutate(log_B = log10(B))
  
  
-## plot on a log x axis
+## Look at scatter plot of data
 p1 <- plot_ly(Gammas_E, x = ~Egam, y = ~B, type = 'scatter', showlegend=F) %>%
    layout(yaxis = list(type="log", title = TeX("B Value, Weisskopf units"), exponentformat='E', tick0=floor(log10(min(Gammas_E$B))),
                        dtick=log10(1E1)), #range=c(log10(0),log10(15))),
@@ -62,13 +45,8 @@ GHist <- hist(Gammas_E$log_B, breaks = K)
 Emin <- min(Gammas_E$Egam)
 Emax <- max(Gammas_E$Egam)
 N_Eparts <- 5
- ## c(mean, stddev)
- ## Start with mid(logB) from mean Count
- ## Gaussian values and x variable for hit function
- 
 
-#Gauss_Fit <- tibble(x=x, G)
-#xvals2 <- seq(min(xvals), max(xvals), 0.1)
+## Histogram slice
 p2 <- plot_ly(Gammas_E, x=~log_B, type="histogram", nbinsx=round(K))%>%
     layout(
       xaxis = list(title="Bvalue, Weisskopt units"),
@@ -76,8 +54,6 @@ p2 <- plot_ly(Gammas_E, x=~log_B, type="histogram", nbinsx=round(K))%>%
     )# %>%
   #add_lines(x=xvals2, y=Gauss(r1$par, xvals2))
 p2
-
-### Find the Energy range of the filtered gammas
 
 
 ### The bin values
@@ -110,24 +86,8 @@ GHists <- tibble(
 )
 
 K <- 9
-#for(i in 1:length(Evals)){
 i <- 1
 while(i < length(Evals)){ 
-  # if(i==1){
-  #   G <- filter(Gammas, Egam < Evals_invLog[i], Mult_Single == TYPE) %>%
-  #     mutate(log_B = log10(B))
-  #   #K <- 5
-  #   GH <- hist(G$log_B, breaks = K)
-  #   GHists$data[[i]] <-  tibble(w=widths[i], x=Emids[i], y=GH$mids, z=GH$counts)
-  #   
-  # } else if(i == length(Evals)){
-  #   G <- filter(Gammas, Egam >= Evals_invLog[i], Btype == TYPE) %>%
-  #     mutate(log_B = log10(B))
-  #   #K <- 2
-  #   GH <- hist(G$log_B, breaks = K)
-  #   GHists$data[[i]] <-  tibble(w=widths[i], x=Emids[i], y=GH$mids, z=GH$counts)
-  #   
-  # } else {
   #i<-3
     G <- filter(Gammas, Egam >= Evals_invLog[i] , Egam < Evals_invLog[i+1], Mult_Single == TYPE) %>%
       mutate(log_B = log10(B))
@@ -140,59 +100,8 @@ while(i < length(Evals)){
     #GHists$fit[[i]] <-  tibble(x=Emids[i], y=GH$mids, z=Gauss(a, GH$mids))
     GHists$fit[[i]] <-  tibble(max = max(GH$counts), mean = mean(G$log_B), sd = sd(G$log_B))
     i <- i + 1
-  # }
 }
 
-
-
-
-# GHists <- filter(Gammas, Egam >= Emids[i] , Egam < Emids[i+1], Btype == "BM1W") %>%
-#   mutate(log_B = log10(B))
-# #K2 <-  round(1+3.322*log10(nrow(NDG_E2)))
-# K2 <- 12
-# GHist2 <- hist(NDG_E2$log_B, breaks = K2)
-# 
-# 
-# NDG_E1 <- filter(Gammas,  Egam < Elow, Btype == "BM1W") %>%
-#   mutate(log_B = log10(B))
-# #K1 <-  round(1+3.322*log10(nrow(NDG_E1)))
-# K1 <- 12
-# GHist1 <- hist(NDG_E1$log_B, breaks = K1)
-# 
-# 
-# ## Create the 2D histograms
-# NDG_E1 <- filter(Gammas,  Egam < Elow, Btype == "BM1W") %>%
-#   mutate(log_B = log10(B))
-# #K1 <-  round(1+3.322*log10(nrow(NDG_E1)))
-# K1 <- 12
-# GHist1 <- hist(NDG_E1$log_B, breaks = K1)
-# 
-# NDG_E2 <- filter(Gammas, Egam >= Elow , Egam < Emid, Btype == "BM1W") %>%
-#   mutate(log_B = log10(B))
-# #K2 <-  round(1+3.322*log10(nrow(NDG_E2)))
-# K2 <- 12
-# GHist2 <- hist(NDG_E2$log_B, breaks = K2)
-# 
-# NDG_E3 <- filter(Gammas, Egam >= Emid, Btype == "BM1W") %>%
-#   mutate(log_B = log10(B))
-# #K3 <- round(1+3.322*log10(nrow(NDG_E3)))
-# K3 <- 12
-# GHist3 <- hist(NDG_E3$log_B, breaks = K3)
-
- ## Do the 3D plot
-
-### TRY doing a 3D histogram
-# The matrix with frequencies from a 3 x 4 cross table
-##
-#z_mtx <- cbind(c(2,4,6,5), c(1,5,9,6), c(2,4,2,3))
-
-
-
-# HistTibble1 <- tibble(w=w1 , x=E1, y=GHist1$mids, z=GHist1$counts)
-# HistTibble2 <- tibble(w=w2, x=E2, y=GHist2$mids, z=GHist2$counts)
-# HistTibble3 <- tibble(w=w3, x=E3, y=GHist3$mids, z=GHist3$counts)
-
-      
 # Define a function to add 3D bars
 add_3Dbar <- function(p, x,y,z, width) {
   w <- width
@@ -252,32 +161,3 @@ fig %>%  layout(
     zaxis = list(title="Count")
   )
 )
-
-
-
-
-
-
-
-
-
-#   for(i in 1:nrow(HistTibble1)){
-#     fig <- fig %>% add_3Dbar(HistTibble1$x[i], HistTibble1$y[i], HistTibble1$z[i], HistTibble1$w[i])
-#   }
-# for(i in 1:nrow(HistTibble2)){
-#   fig <- fig %>% add_3Dbar(HistTibble2$x[i], HistTibble2$y[i], HistTibble2$z[i], HistTibble2$w[i])
-# }
-# for(i in 1:nrow(HistTibble3)){
-#   fig <- fig %>% add_3Dbar(HistTibble3$x[i], HistTibble3$y[i], HistTibble3$z[i], HistTibble3$w[i])
-#}
-#}
-
-
-
-# #Normal Matrices Method
-# G <- rbind(1, exp((-(x+2.2)^2)/1))
-# M <- G %*% t(G)
-# b <- G %*% Counts
-# coeff=solve(M,b)
-# coeff
-
