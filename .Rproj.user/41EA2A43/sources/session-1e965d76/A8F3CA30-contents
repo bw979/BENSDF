@@ -4,9 +4,11 @@ library(tidyverse)
 library(plotly)
 library(DT)  ## for data tables
 
-Gammas <-  read_csv("OUTPUTS/ND_Gamma_Dec2023.csv")
+Gammas <-  read_csv("OUTPUTS/ND_Gamma_Dec2023_BKnown.csv")
 #Gammas <-  filter(Gammas, !is.na(B), B>0)
 #write.table(Gammas, file="OUTPUTS/ND_Gamma_Dec2023_BKnown.csv", append=T, row.names=F, col.names=T,  sep=",")
+
+Gauss <- function(a, x) { return(a[1]*exp((-(x-a[2])^2)/a[3])) }
 
 ### Fitting function for a single GHist tibble
 fit_gauss <- function(counts, log_Bvals, Bmids){
@@ -14,7 +16,6 @@ fit_gauss <- function(counts, log_Bvals, Bmids){
   #xvals <- GH$mids
 
   ## Gaussian function based on mean and sd of log_B data
-  Gauss <- function(a, x) { return(a[1]*exp((-(x-a[2])^2)/a[3])) }
 
   # ## compare chisq for gaussian fit with this histogram with a certain number of bins
   # chisq0 <- function(a, Num_bins) { 
@@ -35,31 +36,6 @@ fit_gauss <- function(counts, log_Bvals, Bmids){
   return(r1)
 }
 
-# #### Fitting backup 
-# a <- c(max(GHist$counts),mean(Gammas_E$log_B), sd(Gammas_E$log_B))
-# xvals <- GHist$mids
-# Counts <- GHist$counts
-
-# 
-# ## Gaussian function based on mean and sd of log_B data
-# Gauss <- function(a, x) { return(a[1]*exp((-(x-a[2])^2)/a[3])) }
-# 
-# ## compare chisq for gaussian fit with this histogram with a certain number of bins
-# chisq0 <- function(a, Num_bins) { 
-#   h2 <- hist(Gammas_E$log_B, breaks=Num_bins, plot=FALSE)
-#   return(sum((GHist$counts - Gauss(a, x))^2/GHist$counts)) 
-# }
-# 
-# ## goodness of fit function
-# Gof <- function(Num_bins){ 
-#   chisq <- chisq0(a, Num_bins)
-#   return(chisq / (Num_bins - length(a))) }
-# 
-# Res <- optim(K, Gof)
-# 
-# chisq1 <- function(a) {return(sum((Counts - Gauss(a, x))^2/Counts))}
-# r1 <- optim(c(1,1,1), chisq1, hessian=TRUE)
- 
 TYPE <- "M1"
 
 Gammas_E <- filter(Gammas, Mult_Single == TYPE) %>%
