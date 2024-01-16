@@ -92,9 +92,12 @@ while(i < length(Evals)){
     G <- filter(Gammas, Egam >= Evals_invLog[i] , Egam < Evals_invLog[i+1], Mult_Single == TYPE) %>%
       mutate(log_B = log(B))
     #K <- 2
-    Bwidths <- (max(G$log_B) - min(G$log_B))/K-1
+    # Bwidths <- (max(G$log_B) - min(G$log_B))/K-1
+    # 
+    # GH <- hist(G$log_B, breaks = K)
+    Bwidths <- (max(G$B) - min(G$B))/K-1
     
-    GH <- hist(G$log_B, breaks = K)
+    GH <- hist(G$B, breaks = K)
     GHists$data[[i]] <-  tibble(wx=widths[i], wy=Bwidths, x=Emids[i], y=GH$mids, z=GH$counts)
     
     ## Add fitted gauss data
