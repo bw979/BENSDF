@@ -20,7 +20,7 @@ fit_gauss <- function(counts, log_Bvals, Bmids){
 }
 
 ## Filtering
-TYPE <- "M1"
+TYPE <- "E2"
 Gammas_E <- filter(Gammas, Mult_Single == TYPE) %>%
    mutate(log_B = log10(B))
  
@@ -33,7 +33,6 @@ p1 <- plot_ly(Gammas_E, x = ~Egam, y = ~B, type = 'scatter', showlegend=F) %>%
    config(mathjax = "cdn") #%>%
 p1
 
- 
 ################################################################################ 
 ##### Histogram parameters based on filtered data ##############################
 ################################################################################
@@ -44,7 +43,7 @@ GHist <- hist(Gammas_E$log_B, breaks = K)
 ### For the number of energy partitions
 Emin <- min(Gammas_E$Egam)
 Emax <- max(Gammas_E$Egam)
-N_Eparts <- 5
+N_Eparts <- 12
 
 ## Histogram slice
 p2 <- plot_ly(Gammas_E, x=~log_B, type="histogram", nbinsx=round(K))%>%
@@ -102,6 +101,7 @@ while(i < length(Evals)){
     i <- i + 1
 }
 
+
 # Define a function to add 3D bars
 add_3Dbar <- function(p, x,y,z, width) {
   w <- width
@@ -114,6 +114,7 @@ add_3Dbar <- function(p, x,y,z, width) {
             k = c(0, 7, 2, 3, 6, 7, 1, 2, 5, 5, 7, 6),
             facecolor = rep(toRGB(viridisLite::inferno(6)), each = 2))
 }
+
 
 
 ### Gaussian fit data
@@ -141,23 +142,33 @@ for(i in 1:length(Emids)){
   }
 }
 
+#### Legend text strings
+#Fit_String <- 
+
+
 ### Add the fitlines
-for(i in 1:length(Emids)){
+for(i in 1:(length(Emids)-1)){
   B_vals <- seq(min(GHists$data[[i]]$y), max(GHists$data[[i]]$y), 0.1)
   xval <- GHists$data[[i]]$x[1]
+  
+  Fit_String <- paste(c("At Energy", round(10^xval, 4), "keV", " Mean B value is ", round(10^GHists$fit[[i]]$mean, 4)), sep = "", collapse=" ")
+  
   fig <- fig %>% add_trace(x = xval,
                          y = B_vals,
                          z = Gauss(c(GHists$fit[[i]]$max, GHists$fit[[i]]$mean, GHists$fit[[i]]$sd) , B_vals ),
                          type = "scatter3d",
-                         mode = "lines"#,
+                         mode = "lines",
+                         name = Fit_String
                          #line = list(color = "black", width = 10)
   )
 }  
 
 fig %>%  layout( 
   scene=list(
+    #legend = list(x=100,y=100,z=100),
     xaxis = list(title="log(Energy, keV)"),
     yaxis = list(title="log(B_value, W.u,)"),
     zaxis = list(title="Count")
   )
 )
+

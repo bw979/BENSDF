@@ -20,14 +20,14 @@ fit_gauss <- function(counts, log_Bvals, Bmids){
 }
 
 ## Filtering
-TYPE <- "M1"
+TYPE <- "E2"
 Gammas_E <- filter(Gammas, Mult_Single == TYPE) %>%
    mutate(log_B = log(B))
  
  
 ## Look at scatter plot of data
 p1 <- plot_ly(Gammas_E, x = ~Egam, y = ~B, type = 'scatter', showlegend=F) %>%
-   layout(yaxis = list(type="log", title = TeX("B Value, Weisskopf units"), exponentformat='E', tick0=floor(log(min(Gammas_E$B))),
+   layout(yaxis = list(type="log", title = TeX("B Value, Weisskopf units"), exponentformat='power', tick0=floor(log(min(Gammas_E$B))),
                        dtick=log(1E1)), #range=c(log(0),log(15))),
           xaxis = list( type="log", tickangle = -45, title="Gamma Energy keV")) %>%
    config(mathjax = "cdn") #%>%
@@ -92,9 +92,12 @@ while(i < length(Evals)){
     G <- filter(Gammas, Egam >= Evals_invLog[i] , Egam < Evals_invLog[i+1], Mult_Single == TYPE) %>%
       mutate(log_B = log(B))
     #K <- 2
-    Bwidths <- (max(G$log_B) - min(G$log_B))/K
+    # Bwidths <- (max(G$log_B) - min(G$log_B))/K-1
+    # 
+    # GH <- hist(G$log_B, breaks = K)
+    Bwidths <- (max(G$B) - min(G$B))/K-1
     
-    GH <- hist(G$log_B, breaks = K)
+    GH <- hist(G$B, breaks = K)
     GHists$data[[i]] <-  tibble(wx=widths[i], wy=Bwidths, x=Emids[i], y=GH$mids, z=GH$counts)
     
     ## Add fitted gauss data

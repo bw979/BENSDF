@@ -140,7 +140,8 @@ server <- function(input, output) {
                                y = B_vals,
                                z = Gauss(c(GHists$fit[[i]]$max, GHists$fit[[i]]$mean, GHists$fit[[i]]$sd) , B_vals ),
                                type = "scatter3d",
-                               mode = "lines"#,
+                               mode = "lines",
+                               name = "Hello"
                               #line = list(color = "black", width = 10)
       )
     }  
