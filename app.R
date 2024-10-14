@@ -4,9 +4,10 @@ library(plotly)
 
 Gammas <-  read_csv("OUTPUTS/ND_Gamma_Dec2023_BKnown.csv")
 
+## Gauss function, input vector a=c[1,2,3] to fit and data x value 
 Gauss <- function(a, x) { return(a[1]*exp((-(x-a[2])^2)/a[3])) }
 
-# Define a function to add 3D bars
+## Define a function to add 3D bars
 add_3Dbar <- function(p, x,y,z, width) {
   w <- width
   add_trace(p, type="mesh3d",
@@ -21,42 +22,67 @@ add_3Dbar <- function(p, x,y,z, width) {
 
 ui <- fluidPage(
   titlePanel("Gamma Ray Predictor"),
-  sidebarLayout(
-    sidebarPanel(
-      #selectInput("Multipol", "Multipolarity:", choices=levels(as.factor(Gammas$Mult_Single)), selected="M1"),
-      selectInput("Multipol", "Multipolarity:", choices=c("M1", "M2", "E1", "E2"), selected="M1"),
-      numericInput("N_Ebins", "Number of Energy Bins:", value = 5)
+  # Create a tabbed panel
+  tabsetPanel(
+    tabPanel("Explore",
+             h3("Welcome to Tab 1"),
+             p("This is the content of the first tab."),
+             sidebarLayout(
+               sidebarPanel(
+                 #selectInput("Multipol", "Multipolarity:", choices=levels(as.factor(Gammas$Mult_Single)), selected="M1"),
+                 selectInput("Multipol", "Multipolarity:", choices=c("M1", "M2", "E1", "E2"), selected="M1"),
+                 numericInput("N_Ebins", "Number of Energy Bins:", value = 5),
+                 actionButton("plotButton", "PLOT")
+               ),
+               mainPanel(
+                 plotlyOutput("plot")
+               )
+              )
     ),
-    mainPanel(
-      plotlyOutput("plot")
+    
+    ## This tab filters based on selecting a mass range or input list of masses
+    tabPanel("Evaluate",
+             h3("Welcome to Tab 2"),
+             p("This is the content of the second tab."),
+             # Set energy range
+             sidebarLayout(
+             sidebarPanel(
+               selectInput("Multipol2", "Multipolarity:", choices=c("M1", "M2", "E1", "E2"), selected="M1"),
+               splitLayout(cellWidths = c("50%", "50%"), 
+                         numericInput(inputId = "E_min", label = "Min Energy (keV):", value=0),
+                         numericInput(inputId = "E_max", label = "Max Energy (keV):", value=max(Gammas$Egam))),
+               # select odd-odd, even-even, or all
+               radioButtons(inputId="Mass_type", label="Type of Mass number?", 
+                          choices=c("Odd-Odd","Even-Even", "Odd Mass", "All"), selected="All"),
+               # Set Mass range
+               splitLayout(cellWidths = c("50%", "50%"), 
+                         numericInput(inputId = "M_min", label = "Min Energy (keV):", value=0),
+                         numericInput(inputId = "M_max", label = "Max Energy (keV):", value=max(Gammas$M))),
+               actionButton("plotButton2", "PLOT and CALCULATE")
+               ),
+               
+             
+             mainPanel(
+               plotlyOutput("plot2")
+             )),
+             
+             
     )
   )
-)
+  )
+
 
 server <- function(input, output) {
   
-
-  
-  observeEvent(input$Multipol,{
+  ######### TAB 1 #####################
+  observeEvent(input$plotButton,{
   
   TYPE <- input$Multipol
-  # TYPE <- reactive({
-  #   return(input$Multipol)
-  # })
+  N_Eparts <- input$N_Ebins
   
   Gammas_E <- filter(Gammas, Mult_Single == TYPE) %>%
     mutate(log_B = log(B))
-  
-  
-  # ## plot on a log x axis
-  # p1 <- plot_ly(Gammas_E, x = ~Egam, y = ~B, type = 'scatter', showlegend=F) %>%
-  #   layout(yaxis = list(type="log", title = TeX("B Value, Weisskopf units"), exponentformat='E', tick0=floor(log(min(Gammas_E$B))),
-  #                       dtick=log(1E1)), #range=c(log(0),log(15))),
-  #          xaxis = list( type="log", tickangle = -45, title="Gamma Energy keV")) %>%
-  #   config(mathjax = "cdn") #%>%
-  # p1
-  
-  
+
   ################################################################################ 
   ##### Histogram parameters based on filtered data ##############################
   ################################################################################
@@ -67,8 +93,7 @@ server <- function(input, output) {
   ### For the number of energy partitions
   Emin <- min(Gammas_E$Egam)
   Emax <- max(Gammas_E$Egam)
-  N_Eparts <- input$N_Ebins
-  
+
   ### The bin values
   # Evals are logarithmic
   Evals <- seq(log10(Emin), log10(Emax), (log10(Emax)-log10(Emin))/N_Eparts)
@@ -132,19 +157,37 @@ server <- function(input, output) {
       }
     }
     
-    ### Add the fitlines
-    for(i in 1:length(Emids)){
+    # ### Add the fitlines
+    # for(i in 1:length(Emids)){
+    #   B_vals <- seq(min(GHists$data[[i]]$y), max(GHists$data[[i]]$y), 0.1)
+    #   xval <- GHists$data[[i]]$x[1]
+    #   fig <- fig %>% add_trace(x = xval,
+    #                            y = B_vals,
+    #                            z = Gauss(c(GHists$fit[[i]]$max, GHists$fit[[i]]$mean, GHists$fit[[i]]$sd) , B_vals ),
+    #                            type = "scatter3d",
+    #                            mode = "lines",
+    #                            name = "Hello"
+    #                           #line = list(color = "black", width = 10)
+    #   )
+    # }
+    
+    ### Add the fitlines and label
+    for(i in 1:(length(Emids)-1)){
       B_vals <- seq(min(GHists$data[[i]]$y), max(GHists$data[[i]]$y), 0.1)
       xval <- GHists$data[[i]]$x[1]
+      
+      Fit_String <- paste(c("At Energy", round(10^xval, 4), "keV", " Mean B value is ", round(10^GHists$fit[[i]]$mean, 4)), sep = "", collapse=" ")
+      
       fig <- fig %>% add_trace(x = xval,
                                y = B_vals,
                                z = Gauss(c(GHists$fit[[i]]$max, GHists$fit[[i]]$mean, GHists$fit[[i]]$sd) , B_vals ),
                                type = "scatter3d",
                                mode = "lines",
-                               name = "Hello"
-                              #line = list(color = "black", width = 10)
+                               name = Fit_String
+                               #line = list(color = "black", width = 10)
       )
     }  
+    
     
     fig %>%  layout( 
       scene=list(
@@ -154,10 +197,43 @@ server <- function(input, output) {
       )
     )
     
-    #fig
+    #end render plotly
+    })
+  #end tab one plot button observe event 
+  })
+  
+  ######### TAB 2 #####################
+  observeEvent(input$plotButton2,{
+  
+    TYPE <- input$Multipol2
     
+    Gammas_E <- filter(Gammas, Mult_Single == TYPE) %>%
+                filter(Egam >= input$E_min, Egam <= input$E_max) %>%
+                filter(M >= input$M_min, M <= input$M_max) %>%
+                mutate(log_B = log10(B))
+
+    
+    ## Histogram slice
+    output$plot2 <- renderPlotly({
+      
+      
+      
+    K <- 9
+    p2 <- plot_ly(Gammas_E, x=~log_B, type="histogram", nbinsx=round(K))%>%
+      layout(
+        xaxis = list(title="Bvalue, Weisskopt units"),
+        yaxis = list(title="Count")
+      )# %>%
+    #add_lines(x=xvals2, y=Gauss(r1$par, xvals2))
+    p2
+    
+    #end render plotly
+    })
+    
+  #end tab 2 plot button observe event 
   })
-  })
+  
+  
 }
 
 

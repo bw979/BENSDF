@@ -1,18 +1,4 @@
-library(tidyverse)
-library(stringr)
-library(plotly)
-library(XML)
-library(processx)
-library(pbapply)
-library(RColorBrewer)
-
-
-Gammas <-  read_csv("OUTPUTS/ND_Gamma_Dec2023_BKnown.csv")
-
-
-Gauss <- function(a, x) { 
-  return(a[1]*exp((-(x-a[2])^2)/a[3])) 
-}
+Gauss <- function(a, x) { return(a[1]*exp((-(x-a[2])^2)/a[3])) }
 
 ### Fitting function for a single GHist tibble
 fit_gauss <- function(counts, log_Bvals, Bmids){
@@ -24,13 +10,11 @@ fit_gauss <- function(counts, log_Bvals, Bmids){
 }
 
 
-#### Just have one slice and fill a histogram between energy ranges and within a mass array
-
-Predict_B <- function(mult, Gammas, N_Eparts, Emin, Emax, Mass_array){
+#### JUst have one slice and fill a histogram between mass ranges
+Predict_B <- function(mult, Gammas){
   
   ## Filtering
   TYPE <- mult
-  
   Gammas_E <- filter(Gammas, Mult_Single == TYPE) %>%
     mutate(log_B = log10(B))
   
@@ -45,7 +29,8 @@ Predict_B <- function(mult, Gammas, N_Eparts, Emin, Emax, Mass_array){
   ### For the number of energy partitions
   Emin <- min(Gammas_E$Egam)
   Emax <- max(Gammas_E$Egam)
-
+  N_Eparts <- 1
+  
   ### The bin values
   # Evals are logarithmic
   Evals <- seq(log10(Emin), log10(Emax), (log10(Emax)-log10(Emin))/N_Eparts)
@@ -76,7 +61,7 @@ Predict_B <- function(mult, Gammas, N_Eparts, Emin, Emax, Mass_array){
   )
   
   ### Fits the Gaussians
-  K <- 100
+  K <- 9
   i <- 1
   while(i < length(Evals)){ 
     #i<-3
@@ -93,77 +78,12 @@ Predict_B <- function(mult, Gammas, N_Eparts, Emin, Emax, Mass_array){
     i <- i + 1
   }
   
- ### Find the maximum counts value in this GHists$fit[[i]]$max
- for(i in 1:(length(GHists$fit)-1)){
-   print(i)
-    if(i==1){
-      MAx <- GHists$fit[[i]]$max
-    } else {
-     MAx <- GHists$fit[[i-1]]$max
-   }
-   if(GHists$fit[[i]]$max >= MAx ){
-     MAx_save <- GHists$fit[[i]]$max
-   }
- }  
-  
-  # ### Fitting function for a single GHist tibble
-  # fit_gauss <- function(counts, log_Bvals, Bmids){
-  #   a <- c(max(counts),mean(log_Bvals), sd(log_Bvals))
-  #   #Counts <- GHist$counts
-  #   chisq1 <- function(vals) {return(sum((counts - Gauss(vals, x))^2/counts))}
-  #   r1 <- optim(a, chisq1, hessian=TRUE)
-  #   return(r1)
-  # }
- xvals <- seq(min(Gammas_E$log_B), max(Gammas_E$log_B), ((max(Gammas_E$log_B)-min(Gammas_E$log_B))/(length(Gammas_E$log_B))))
- #### Make a nice plotly plot output
  i<- 1
- 
- # OutPlot <- plot_ly(name="E1") %>%
- #   add_histogram(Gammas_E$log_B, marker=list(color="orange"), showlegend=T) %>%
- #   add_lines( x=xvals, y=9*MAx_save*dnorm(xvals,  GHists$fit[[i]]$mean, GHists$fit[[i]]$sd), showlegend=F) %>%
- #   layout(
- #     xaxis=list(title="log(B-value)"),
- #     yaxis=list(title="Count")
- #    
- #   )
-  
-
- #if(Plotting==F){
-   return(10^(GHists$fit[[i]]$mean))
-# } else {
-  # return(OutPlot)
- #}
+ return(10^(GHists$fit[[i]]$mean))
   
 }
 
 
-M2 <- Predict_B("M2", Gammas, T)
+#Predict_B("E2", Gammas)
 
 
-Predict_B <- function(mult, Gammas, N_Eparts, Emin, Emax, Mass_array)
-
-
-E1
-E2
-M1
-M2
-
-subplot(E1, E2, M1, M2, nrows=2, shareX=FALSE ) %>%
-  layout(
-    xaxis=list(title="log(B-value)"),
-    yaxis=list(title="Count")
-    
-  )
-
-
-  #dnorm(x, mean, sd)
-xv <- 
-dnorm(seq(-10, 5, 0.1), 1, 1)
-
-plot_ly() %>%
-  add_histogram(Gammas_E$log_B) %>%
-  add_lines( x=seq(-10, 5, 0.1), y=max(GHists$fit[[1]]$max)*dnorm(seq(-10, 5, 0.1),  GHists$fit[[i]]$mean, GHists$fit[[i]]$sd))
-
-plot( x=seq(-10, 5, 0.1), y=dnorm(seq(-10, 5, 0.1),  GHists$fit[[i]]$mean, GHists$fit[[i]]$sd))
-)
-GHists$fit[[8]]$max
