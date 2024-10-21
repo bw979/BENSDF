@@ -10,10 +10,10 @@ Gammas <-  read_csv("OUTPUTS/ND_Gamma_Dec2023_BKnown.csv")
 
 Gauss <- function(a, x) { return(a[1]*exp((-(x-a[2])^2)/a[3])) }
 
-### Fitting function for a single GHist tibble
+### Fitting function for a single GHist (h) tibble
 fit_gauss <- function(counts, log_Bvals, Bmids){
   a <- c(max(counts),mean(log_Bvals), sd(log_Bvals))
-  #Counts <- GHist$counts
+  #Counts <-h$counts
   chisq1 <- function(vals) {return(sum((counts - Gauss(vals, x))^2/counts))}
   r1 <- optim(a, chisq1, hessian=TRUE)
   return(r1)
@@ -38,7 +38,38 @@ p1
 ################################################################################
 ## Initial guess of num_bins based on Sturge's rule
 K<- 1+3.322*log10(nrow(Gammas_E))
+
 GHist <- hist(Gammas_E$log_B, breaks = K)
+
+
+###### FItting to a single histogram ###########################################
+### Fitting function for a singleh tibble
+fit_gauss <- function(counts, log_Bvals){
+  a <- c(max(counts),mean(log_Bvals), sd(log_Bvals))
+  #Counts <-h$counts
+  chisq1 <- function(vals) {return(sum((counts - Gauss(a, log_Bvals))^2/counts))}
+  r1 <- optim(a, chisq1, hessian=TRUE)
+  return(r1)
+}
+
+fit_gauss(GHist$counts,h$mids)
+
+mean(GHist$mids)
+
+# #Load necessary library
+# library(ggplot2)
+# 
+# # Generate random data
+# data <- rnorm(1000)
+# 
+# # Create a histogram with Gaussian fit
+# ggplot(data.frame(x = data), aes(x)) +
+#   geom_histogram(aes(y = ..density..), bins = 30, color = "black", fill = "lightblue") +
+#   stat_function(fun = dnorm, args = list(mean = mean(data), sd = sd(data)), color = "red", size = 1) +
+#   labs(title = "Histogram with Gaussian Fit", x = "Value", y = "Density")
+
+################################################################################
+
 
 ### For the number of energy partitions
 Emin <- min(Gammas_E$Egam)
@@ -92,7 +123,7 @@ while(i < length(Evals)){
       mutate(log_B = log10(B))
     #K <- 2
     GH <- hist(G$log_B, breaks = K)
-    GHists$data[[i]] <-  tibble(w=widths[i], x=Emids[i], y=GH$mids, z=GH$counts)
+   GHists$data[[i]] <-  tibble(w=widths[i], x=Emids[i], y=GH$mids, z=GH$counts)
     
     ## Add fitted gauss data
     a <- c(max(GH$counts), mean(G$log_B), sd(G$log_B))
@@ -119,7 +150,7 @@ add_3Dbar <- function(p, x,y,z, width) {
 
 ### Gaussian fit data
 #fit_gauss <- function(counts, log_Bvals, GH){
-#fit_gauss(GHists$data[[3]]$z, GHists$data[[3]]$y)
+fit_gauss(GHists$data[[3]]$z, GHists$data[[3]]$y)
 
 # range(GHists$data[[3]]$y)
 # #B_array <- seq(max(GHists$data[[3]]$y), max(GHists$data[[3]]$y), 0.1)

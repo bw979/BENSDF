@@ -1,6 +1,7 @@
 library(shiny)
 library(tidyverse)
 library(plotly)
+library(rvmethod)
 
 Gammas <-  read_csv("OUTPUTS/ND_Gamma_Dec2023_BKnown.csv")
 
@@ -56,8 +57,8 @@ ui <- fluidPage(
                           choices=c("Odd-Odd","Even-Even", "Odd Mass", "All"), selected="All"),
                # Set Mass range
                splitLayout(cellWidths = c("50%", "50%"), 
-                         numericInput(inputId = "M_min", label = "Min Energy (keV):", value=0),
-                         numericInput(inputId = "M_max", label = "Max Energy (keV):", value=max(Gammas$M))),
+                         numericInput(inputId = "M_min", label = "Lower Mass:", value=0),
+                         numericInput(inputId = "M_max", label = "Upper Mass:", value=max(Gammas$M))),
                actionButton("plotButton2", "PLOT and CALCULATE")
                ),
                
@@ -88,7 +89,7 @@ server <- function(input, output) {
   ################################################################################
   ## Initial guess of num_bins based on Sturge's rule
   K<- 1+3.322*log10(nrow(Gammas_E))
-  #GHist <- hist(Gammas_E$log_B, breaks = K)
+  #h <- hist(Gammas_E$log_B, breaks = K)
   
   ### For the number of energy partitions
   Emin <- min(Gammas_E$Egam)
@@ -202,7 +203,10 @@ server <- function(input, output) {
   #end tab one plot button observe event 
   })
   
-  ######### TAB 2 #####################
+  ##############################################################################
+  ################################# TAB 2 ######################################
+  ##############################################################################
+  
   observeEvent(input$plotButton2,{
   
     TYPE <- input$Multipol2
@@ -212,19 +216,38 @@ server <- function(input, output) {
                 filter(M >= input$M_min, M <= input$M_max) %>%
                 mutate(log_B = log10(B))
 
+    K <- round(1+3.322*log10(nrow(Gammas_E)))
+    h <- hist(Gammas_E$log_B, breaks = K)
+    xvals <- h$mids
+    mean_logB <- sum(h$counts*h$mids)/(nrow(Gammas_E))
+    sd_logB <- sd(h$mids)
+    
+    # ### Fitting function for a single h tibble
+    # fit_gauss <- function(counts, log_Bvals, Bmids){
+    #   a <- c(max(counts),mean(log_Bvals), sd(log_Bvals))
+    #   #Counts <- h$counts
+    #   chisq1 <- function(vals) {return(sum((counts - Gauss(vals, x))^2/counts))}
+    #   r1 <- optim(a, chisq1, hessian=TRUE)
+    #   return(r1)
+    # }
+    
+    yvals <- max(h$counts)*gaussfunc(h$mids, mean_logB, sd_logB)
     
     ## Histogram slice
     output$plot2 <- renderPlotly({
       
-      
-      
-    K <- 9
     p2 <- plot_ly(Gammas_E, x=~log_B, type="histogram", nbinsx=round(K))%>%
       layout(
         xaxis = list(title="Bvalue, Weisskopt units"),
         yaxis = list(title="Count")
-      )# %>%
+      ) %>%
     #add_lines(x=xvals2, y=Gauss(r1$par, xvals2))
+      add_trace(x = xvals,
+                y = yvals,
+                type = "scatter",
+                mode = "lines")
+                #name = Fit_String)
+                #line = list(color = "black", width = 10)
     p2
     
     #end render plotly
