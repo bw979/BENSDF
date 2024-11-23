@@ -10,19 +10,6 @@ Gammas <-  read_csv("OUTPUTS/ND_Gamma_Dec2023_BKnown.csv")
 ## Gauss function, input vector a=c[1,2,3] to fit and data x value 
 Gauss <- function(a, x) { return(a[1]*exp((-(x-a[2])^2)/a[3])) }
 
-## Define a function to add 3D bars
-add_3Dbar <- function(p, x,y,z, width) {
-  w <- width
-  add_trace(p, type="mesh3d",
-            x = c(x-w, x-w, x+w, x+w, x-w, x-w, x+w, x+w),
-            y = c(y-w, y+w, y+w, y-w, y-w, y+w, y+w, y-w),
-            z = c(0, 0, 0, 0, z, z, z, z),
-            i = c(7, 0, 0, 0, 4, 4, 2, 6, 4, 0, 3, 7),
-            j = c(3, 4, 1, 2, 5, 6, 5, 5, 0, 1, 2, 2),
-            k = c(0, 7, 2, 3, 6, 7, 1, 2, 5, 5, 7, 6),
-            facecolor = rep(toRGB(viridisLite::inferno(6)), each = 2))
-}
-
 ui <- fluidPage(
   titlePanel("Gamma Ray Predictor"),
   # Create a tabbed panel
@@ -34,11 +21,12 @@ ui <- fluidPage(
                sidebarPanel(
                  #selectInput("Multipol", "Multipolarity:", choices=levels(as.factor(Gammas$Mult_Single)), selected="M1"),
                  selectInput("Multipol", "Multipolarity:", choices=c("M1", "M2", "E1", "E2"), selected="M1"),
-                 numericInput("N_Ebins", "Number of Energy Bins:", value = 5),
+                 numericInput("N_Ebins", "Number of Energy Bins:", value = 7),
                  actionButton("plotButton", "PLOT")
                ),
                mainPanel(
-                 plotlyOutput("plot", height="1%")
+                 plotlyOutput("plot0"),
+                 plotlyOutput("plot")
                )
               )
     ),
@@ -63,7 +51,7 @@ ui <- fluidPage(
                          numericInput(inputId = "M_min", label = "Lower Mass:", value=0),
                          numericInput(inputId = "M_max", label = "Upper Mass:", value=max(Gammas$M))),
                # set number of B-value bins
-               numericInput(inputId = "K", label = "NUmber of B-value bins", value=50),
+               numericInput(inputId = "K", label = "Number of B-value bins", value=50),
                actionButton("plotButton2", "PLOT and CALCULATE")
                ),
                
@@ -81,20 +69,129 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   ######### TAB 1 #####################
+  output$plot0 <- renderPlotly({
+  ######## PLot the 2D plot  ################
+  E.1 <- filter(Gammas, Mult_Single=="E1")
+  pE1 <- plot_ly(E.1, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="brown")) %>%
+    layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
+           yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
+           showlegend=T
+    )
+  
+  E.2 <- filter(Gammas, Mult_Single=="E2")
+  pE2 <- plot_ly(E.2, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="orange")) %>%
+    layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
+           yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
+           showlegend=T
+    )
+  
+
+  M.1 <- filter(Gammas, Mult_Single=="M1")
+  pM1 <- plot_ly(M.1, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="green")) %>%
+    layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
+           yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
+           showlegend=T
+    )
+  
+  M.2 <- filter(Gammas, Mult_Single=="M2")
+  pM2 <- plot_ly(M.2, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="blue")) %>%
+    layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
+           yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
+           showlegend=T
+    )
+  
+  
+  all <- subplot(pE1, pE2, pM1, pM2, nrows=2, titleY=T, titleX=T, margin=0.035)
+  all
+  
+  })
+  
+  ####### Plot the 3D plot ##################
   observeEvent(input$plotButton,{
+    
+  withProgress({
   
   TYPE <- input$Multipol
   N_Eparts <- input$N_Ebins
   
   Gammas_E <- filter(Gammas, Mult_Single == TYPE) %>%
     mutate(log_B = log(B))
+  
+  if(TYPE=="M1"){
+    ## Define a function to add 3D bars
+    add_3Dbar <- function(p, x,y,z, width, width2) {
+      w <- width
+      bw <- width2
+      add_trace(p, type="mesh3d",
+                x = c(x-w, x-w, x+w, x+w, x-w, x-w, x+w, x+w),
+                y = c(y-bw, y+bw, y+bw, y-bw, y-bw, y+bw, y+bw, y-bw),
+                z = c(0, 0, 0, 0, z, z, z, z),
+                i = c(7, 0, 0, 0, 4, 4, 2, 6, 4, 0, 3, 7),
+                j = c(3, 4, 1, 2, 5, 6, 5, 5, 0, 1, 2, 2),
+                k = c(0, 7, 2, 3, 6, 7, 1, 2, 5, 5, 7, 6),
+                facecolor = rep(toRGB(viridisLite::turbo(6)), each = 2))
+    }
+    ## Initial setting of number of Ebins and Bvalue bins respectively
+    #N_Eparts <- 10
+    K <- 30
+  } else if(TYPE=="M2"){
+    ## Define a function to add 3D bars
+    add_3Dbar <- function(p, x,y,z, width, width2) {
+      w <- width
+      bw <- width2
+      add_trace(p, type="mesh3d",
+                x = c(x-w, x-w, x+w, x+w, x-w, x-w, x+w, x+w),
+                y = c(y-bw, y+bw, y+bw, y-bw, y-bw, y+bw, y+bw, y-bw),
+                z = c(0, 0, 0, 0, z, z, z, z),
+                i = c(7, 0, 0, 0, 4, 4, 2, 6, 4, 0, 3, 7),
+                j = c(3, 4, 1, 2, 5, 6, 5, 5, 0, 1, 2, 2),
+                k = c(0, 7, 2, 3, 6, 7, 1, 2, 5, 5, 7, 6),
+                facecolor = rep(toRGB(viridisLite::inferno(6)), each = 2))
+    }
+    ## Initial setting of number of Ebins and Bvalue bins respectively
+    #N_Eparts <- 12
+    K <- 30
+  } else if(TYPE=="E1"){
+    ## Define a function to add 3D bars
+    add_3Dbar <- function(p, x,y,z, width, width2) {
+      w <- width
+      bw <- width2
+      add_trace(p, type="mesh3d",
+                x = c(x-w, x-w, x+w, x+w, x-w, x-w, x+w, x+w),
+                y = c(y-bw, y+bw, y+bw, y-bw, y-bw, y+bw, y+bw, y-bw),
+                z = c(0, 0, 0, 0, z, z, z, z),
+                i = c(7, 0, 0, 0, 4, 4, 2, 6, 4, 0, 3, 7),
+                j = c(3, 4, 1, 2, 5, 6, 5, 5, 0, 1, 2, 2),
+                k = c(0, 7, 2, 3, 6, 7, 1, 2, 5, 5, 7, 6),
+                facecolor = rep(toRGB(viridisLite::rocket(6)), each = 2))
+    }
+    ## Initial setting of number of Ebins and Bvalue bins respectively
+    #N_Eparts <- 7
+    K <- 30
+  } else if(TYPE=="E2"){
+    # Define a function to add 3D bars
+    add_3Dbar <- function(p, x,y,z, width, width2) {
+      w <- width
+      bw <- width2
+      add_trace(p, type="mesh3d",
+                x = c(x-w, x-w, x+w, x+w, x-w, x-w, x+w, x+w),
+                y = c(y-bw, y+bw, y+bw, y-bw, y-bw, y+bw, y+bw, y-bw),
+                z = c(0, 0, 0, 0, z, z, z, z),
+                i = c(7, 0, 0, 0, 4, 4, 2, 6, 4, 0, 3, 7),
+                j = c(3, 4, 1, 2, 5, 6, 5, 5, 0, 1, 2, 2),
+                k = c(0, 7, 2, 3, 6, 7, 1, 2, 5, 5, 7, 6),
+                facecolor = rep(toRGB(viridisLite::mako(6)), each = 2))
+    }
+    ## Initial setting of number of Ebins and Bvalue bins respectively
+    #N_Eparts <- 20
+  #  K <- 30
+  }
+  
+  K <- 30
 
   ################################################################################ 
   ##### Histogram parameters based on filtered data ##############################
   ################################################################################
-  ## Initial guess of num_bins based on Sturge's rule
-  K<- 1+3.322*log10(nrow(Gammas_E))
-  #h <- hist(Gammas_E$log_B, breaks = K)
   
   ### For the number of energy partitions
   Emin <- min(Gammas_E$Egam)
@@ -121,7 +218,7 @@ server <- function(input, output) {
   GHists <- tibble(
     Emids = Emids,
     data = list(
-      tibble(w=double(1), x=double(1), y=double(1), z=double(1))
+      tibble(w=double(1), bw=double(1), x=double(1), y=double(1), z=double(1))
       #tibble(w=NULL, x=NULL, y=NULL, z=NULL)
     ),
     fit = list(
@@ -129,18 +226,25 @@ server <- function(input, output) {
     )
   )
   
-  K <- 9
-  #for(i in 1:length(Evals)){
+  ### Fills the nested tibble with B-value histograms for each E-value bin
+  bwidths <- rep(0, length(Evals))
+  # Kstep
+  # Kvec <- seq(min(G$log_B), max(G$log_B), )
   i <- 1
   while(i < length(Evals)){ 
-    #i<-3
+    #i<-6
     G <- filter(Gammas, Egam >= Evals_invLog[i] , Egam < Evals_invLog[i+1], Mult_Single == TYPE) %>%
       mutate(log_B = log(B))
-    #K <- 2
+    
+    
+    ### Histogram the current set of Bvalue data
     GH <- hist(G$log_B, breaks = K)
     
+    ## Get the Bvalue widths from this histogram
+    bwidths[i] <- 0.5*(max(GH$mids) - min(GH$mids))/(length(GH$mids) -1)
+    
     ## Add histogram data
-    GHists$data[[i]] <-  tibble(w=widths[i], x=Emids[i], y=GH$mids, z=GH$counts)
+    GHists$data[[i]] <-  tibble(w=widths[i], bw = bwidths[i], x=Emids[i], y=GH$mids, z=GH$counts)
     
     ## Add fitted gauss data
     a <- c(max(GH$counts), mean(G$log_B), sd(G$log_B))
@@ -152,6 +256,8 @@ server <- function(input, output) {
   #3D histogram
   output$plot <- renderPlotly({
     fig <- plot_ly(showlegend=F, height="600")
+    #fig <- plot_ly(showlegend=F)
+    
     ### Draw the 3D bars
     for(i in 1:length(Emids)){
       # i<-3
@@ -159,23 +265,10 @@ server <- function(input, output) {
         fig <- fig %>% add_3Dbar(GHists$data[[i]]$x[j], 
                                  GHists$data[[i]]$y[j], 
                                  GHists$data[[i]]$z[j], 
-                                 GHists$data[[i]]$w[j])
+                                 GHists$data[[i]]$w[j],
+                                 GHists$data[[i]]$bw[j])
       }
     }
-    
-    # ### Add the fitlines
-    # for(i in 1:length(Emids)){
-    #   B_vals <- seq(min(GHists$data[[i]]$y), max(GHists$data[[i]]$y), 0.1)
-    #   xval <- GHists$data[[i]]$x[1]
-    #   fig <- fig %>% add_trace(x = xval,
-    #                            y = B_vals,
-    #                            z = Gauss(c(GHists$fit[[i]]$max, GHists$fit[[i]]$mean, GHists$fit[[i]]$sd) , B_vals ),
-    #                            type = "scatter3d",
-    #                            mode = "lines",
-    #                            name = "Hello"
-    #                           #line = list(color = "black", width = 10)
-    #   )
-    # }
     
     ### Add the fitlines and label
     for(i in 1:(length(Emids)-1)){
@@ -205,6 +298,8 @@ server <- function(input, output) {
     
     #end render plotly
     })
+  #end progress bar
+  })
   #end tab one plot button observe event 
   })
   
@@ -283,7 +378,7 @@ server <- function(input, output) {
 
       
       ## Final plotting
-      h <- hist(Gammas_E$log_B, breaks = K, xlab="Log(B-value), w.u.", main ="Histogram and Gaussian fit of logarthmic B-values")
+      h <- hist(Gammas_E$log_B, breaks = K, xlab="Log(B-value, w.u.", main ="Histogram and Gaussian fit of logarthmic B-values")
       lines(xvals, yvals)
       mean_string <- paste("Mean is:", signif(10^optim_mean_logB, 3), " w.u.")
       text(0.7*min(Gammas_E$log_B), max(h$counts), mean_string)
