@@ -25,7 +25,6 @@ fit_gauss <- function(counts, log_Bvals, Bmids){
 
 
 #### Just have one slice and fill a histogram between energy ranges and within a mass array
-
 Predict_B <- function(mult, Gammas, N_Eparts, Emin, Emax, Mass_array){
   
   ## Filtering
