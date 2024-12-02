@@ -83,7 +83,7 @@ ui <- page_fillable(
                  actionButton("plotButton", "PLOT"),
 
                #mainPanel(
-                 #plotlyOutput("plot0"),
+                 plotlyOutput("plot0"),
                  plotlyOutput("plot")
                #)
              #),
@@ -174,44 +174,44 @@ ui <- page_fillable(
 
 server <- function(input, output) {
   
-  # ######### TAB 1 #####################
-  # output$plot0 <- renderPlotly({
-  # ######## PLot the 2D plot  ################
-  # E.1 <- filter(Gammas, Mult_Single=="E1")
-  # pE1 <- plot_ly(E.1, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="brown")) %>%
-  #   layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
-  #          yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
-  #          showlegend=T
-  #   )
-  # 
-  # E.2 <- filter(Gammas, Mult_Single=="E2")
-  # pE2 <- plot_ly(E.2, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="orange")) %>%
-  #   layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
-  #          yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
-  #          showlegend=T
-  #   )
-  # 
-  # 
-  # M.1 <- filter(Gammas, Mult_Single=="M1")
-  # pM1 <- plot_ly(M.1, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="green")) %>%
-  #   layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
-  #          yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
-  #          showlegend=T
-  #   )
-  # 
-  # M.2 <- filter(Gammas, Mult_Single=="M2")
-  # pM2 <- plot_ly(M.2, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="blue")) %>%
-  #   layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
-  #          yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
-  #          showlegend=T
-  #   )
-  # 
-  # 
-  # all <- subplot(pE1, pE2, pM1, pM2, nrows=2, titleY=T, titleX=T, margin=0.035)
-  # all
-  # 
-  # #end plot0
-  # })
+  ######### TAB 1 #####################
+  output$plot0 <- renderPlotly({
+  ######## PLot the 2D plot  ################
+  E.1 <- filter(Gammas, Mult_Single=="E1")
+  pE1 <- plot_ly(E.1, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="brown")) %>%
+    layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
+           yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
+           showlegend=T
+    )
+
+  E.2 <- filter(Gammas, Mult_Single=="E2")
+  pE2 <- plot_ly(E.2, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="orange")) %>%
+    layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
+           yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
+           showlegend=T
+    )
+
+
+  M.1 <- filter(Gammas, Mult_Single=="M1")
+  pM1 <- plot_ly(M.1, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="green")) %>%
+    layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
+           yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
+           showlegend=T
+    )
+
+  M.2 <- filter(Gammas, Mult_Single=="M2")
+  pM2 <- plot_ly(M.2, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="blue")) %>%
+    layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
+           yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
+           showlegend=T
+    )
+
+
+  all <- subplot(pE1, pE2, pM1, pM2, nrows=2, titleY=T, titleX=T, margin=0.035)
+  all
+
+  #end plot0
+  })
   
   ####### Plot the 3D plot ##################
   observeEvent(input$plotButton,{
@@ -225,6 +225,7 @@ server <- function(input, output) {
     mutate(log_B = log(B))
   
   if(TYPE=="M1"){
+    BC <- viridisLite::turbo(10)[5]
     ## Define a function to add 3D bars
     add_3Dbar <- function(p, x,y,z, width, width2) {
       w <- width
@@ -242,6 +243,7 @@ server <- function(input, output) {
     #N_Eparts <- 10
     K <- 30
   } else if(TYPE=="M2"){
+    BC <- viridisLite::inferno(10)[5]
     ## Define a function to add 3D bars
     add_3Dbar <- function(p, x,y,z, width, width2) {
       w <- width
@@ -259,6 +261,7 @@ server <- function(input, output) {
     #N_Eparts <- 12
     K <- 30
   } else if(TYPE=="E1"){
+    BC <- viridisLite::rocket(10)[5]
     ## Define a function to add 3D bars
     add_3Dbar <- function(p, x,y,z, width, width2) {
       w <- width
@@ -276,6 +279,7 @@ server <- function(input, output) {
     #N_Eparts <- 7
     K <- 30
   } else if(TYPE=="E2"){
+    BC <- viridisLite::mako(10)[5]
     # Define a function to add 3D bars
     add_3Dbar <- function(p, x,y,z, width, width2) {
       w <- width
@@ -291,8 +295,9 @@ server <- function(input, output) {
     }
     ## Initial setting of number of Ebins and Bvalue bins respectively
     #N_Eparts <- 20
-  #  K <- 30
+    K <- 30
   }
+  
   
   K <- 30
 
@@ -472,13 +477,17 @@ server <- function(input, output) {
     yvals <- max(h$counts)*gaussfunc(xvals, optim_mean_logB, optim_sd_logB)
 
 
-    # ## Final plotting
-    # h <- hist(Gammas_E$log_B, breaks = K)
-    # lines(xvals, yvals)
-    # mean_string <- paste("Mean is:", signif(10^optim_mean_logB, 3), " w.u.")
-    # text(0.7*min(Gammas_E$log_B), max(h$counts), mean_string)
-    # sd_string <- paste0("sd is: +/- log(", signif(10^optim_sd_logB, 3), ") w.u.")
-    # text(0.7*min(Gammas_E$log_B), 0.9*max(h$counts), sd_string)
+    if(TYPE=="M1"){
+      BC <- viridisLite::turbo(10)[5]
+    } else if(TYPE=="M2"){
+      BC <- viridisLite::inferno(10)[5]
+    } else if(TYPE=="E1"){
+      BC <- viridisLite::rocket(10)[5]
+    } else if(TYPE=="E2"){
+      BC <- viridisLite::mako(10)[5]
+    }
+      
+    
 
     ## Histogram slice
     #output$plot2 <- renderPlot({
@@ -487,7 +496,8 @@ server <- function(input, output) {
     output$plot2 <-  renderImage({
         img <- htmltools::capturePlot({
           ## Final plotting
-          h <- hist(Gammas_E$log_B, breaks = "FD", xlab="Log(B-value, w.u.",
+          h <- hist(Gammas_E$log_B, breaks = "FD", col = BC,
+                    xlab="Log(B-value, w.u.)",
                     main ="Histogram and Gaussian fit of logarthmic B-values")
           lines(xvals, yvals)
           mean_string <- paste("Mean is:", signif(10^optim_mean_logB, 3), " w.u.")
@@ -499,7 +509,7 @@ server <- function(input, output) {
       }, deleteFile = TRUE)  
       
       # ## Final plotting
-      # h <- hist(Gammas_E$log_B, breaks = "FD", xlab="Log(B-value, w.u.",
+      # h <- hist(Gammas_E$log_B, breaks = "FD", xlab="Log(B-value, w.u.)",
       #           main ="Histogram and Gaussian fit of logarthmic B-values")
       # lines(xvals, yvals)
       # mean_string <- paste("Mean is:", signif(10^optim_mean_logB, 3), " w.u.")
