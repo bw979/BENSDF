@@ -45,7 +45,7 @@ ui <- page_fillable(
   #   ## This tab filters based on selecting a mass range or input list of masses
     #tabPanel("Evaluate",
   accordion_panel("Evaluate",
-             h3("Tab 2"),
+             #h3("Tab 2"),
              p("On this tab you can filter all the B-value data and fit a logarithmic Gaussian distribution, giving you a very good idea of a starting point for any transition matrix element. This is much
                better than using Weisskopf units on their own, as you are using a best educated guess fitted to all known transitions of the set type."),
              # Set energy range
