@@ -13,116 +13,128 @@ Gammas <-  read_csv("OUTPUTS/ND_Gamma_Dec2023_BKnown.csv")
 Gauss <- function(a, x) { return(a[1]*exp((-(x-a[2])^2)/a[3])) }
 
 
-# ########## NORMAL FLUID PAGE ##################################################
-# ui <- fluidPage(
-#   titlePanel("Gamma Ray Predictor"),
-#   # Create a tabbed panel
-#   tabsetPanel(
-#     tabPanel("Explore",
+########## NORMAL FLUID PAGE ##################################################
+#ui <- fluidPage(
+  
+ui <- page_fillable(
+  titlePanel("Gamma Ray Predictor"),
+  # Create a tabbed panel
+  accordion(
+    open=F,  ## height="50cm" height argument seems to just set the page height  
+    accordion_panel("Explore",
+  #tabsetPanel(
+  #  tabPanel("Explore",
+             p("Filter the BENSDF Gamma database for the most common multipolarities and select number of energy bins for the 3D histogram.
+               The B-value data is text scraped from the raw ENSDF database."),
+             sidebarLayout(
+               sidebarPanel(
+                 #height= 1000,
+                 #selectInput("Multipol", "Multipolarity:", choices=levels(as.factor(Gammas$Mult_Single)), selected="M1"),
+                 selectInput("Multipol", "Multipolarity:", choices=c("M1", "M2", "E1", "E2"), selected="M1"),
+                 numericInput("N_Ebins", "Number of Energy Bins:", value = 7),
+                 actionButton("plotButton", "PLOT")
+               ),
+               mainPanel(
+                 #plotlyOutput("plot0"),
+                 plotlyOutput("plot")
+               )
+              ),
+    ## close first accordion panel         
+    ),
+
+  #   ## This tab filters based on selecting a mass range or input list of masses
+    #tabPanel("Evaluate",
+  accordion_panel("Evaluate",
+             h3("Tab 2"),
+             p("On this tab you can filter all the B-value data and fit a logarithmic Gaussian distribution, giving you a very good idea of a starting point for any transition matrix element. This is much
+               better than using Weisskopf units on their own, as you are using a best educated guess fitted to all known transitions of the set type."),
+             # Set energy range
+             sidebarLayout(
+             sidebarPanel(
+               selectInput("Multipol2", "Multipolarity:", choices=c("M1", "M2", "E1", "E2"), selected="M1"),
+               splitLayout(cellWidths = c("50%", "50%"),
+                         numericInput(inputId = "E_min", label = "Min Energy (keV):", value=0),
+                         numericInput(inputId = "E_max", label = "Max Energy (keV):", value=max(Gammas$Egam))),
+               # select odd-odd, even-even, or all
+               radioButtons(inputId="Mass_type", label="Type of Mass number?",
+                          choices=c("All", "Odd-Odd", "Even-Even", "Odd-Mass", "Even-Mass" ), selected="All"),
+               # Set Mass range
+               splitLayout(cellWidths = c("50%", "50%"),
+                         numericInput(inputId = "M_min", label = "Lower Mass:", value=0),
+                         numericInput(inputId = "M_max", label = "Upper Mass:", value=max(Gammas$M))),
+               # set number of B-value bins
+               numericInput(inputId = "K", label = "Number of B-value bins", value=50),
+               actionButton("plotButton2", "PLOT and CALCULATE")
+               ),
+
+
+             mainPanel(
+               plotOutput("plot2")
+             )),
+
+    ## close second accordion panel    
+    )
+  
+  #close main accordion
+   )
+    
+   # end fluidpage 
+  )
+
+#  #################### CARDS UI #################################################
+# ui <- page_fillable(
+#   #titlePanel("Gamma Ray Predictor"),
+#     card(card_header("Explore"),
 #              h3("Tab 1"),
 #              p("The B value data is text scraped from the raw ENSDF database"),
-#              sidebarLayout(
-#                sidebarPanel(
+#              #sidebarLayout(
+#                #sidebarPanel(
 #                  #selectInput("Multipol", "Multipolarity:", choices=levels(as.factor(Gammas$Mult_Single)), selected="M1"),
 #                  selectInput("Multipol", "Multipolarity:", choices=c("M1", "M2", "E1", "E2"), selected="M1"),
 #                  numericInput("N_Ebins", "Number of Energy Bins:", value = 7),
-#                  actionButton("plotButton", "PLOT")
-#                ),
-#                mainPanel(
+#                  actionButton("plotButton", "PLOT"),
+# 
+#                #mainPanel(
 #                  plotlyOutput("plot0"),
 #                  plotlyOutput("plot")
-#                )
-#               )
+#                #)
+#              #),
+# 
 #     ),
 # 
 #     ## This tab filters based on selecting a mass range or input list of masses
-#     tabPanel("Evaluate",
+#     card(card_header("Evaluate"),
 #              h3("Tab 2"),
 #              p("On th is tab you can filer all the B-value data and fit a logarithmic gaussian, giving you a very good idea of a starting point for any transition matrix element. This is much
 #                better than using Weisskopf units on their own, as you are using a best educated guess fitted to all known transitions of the set type."),
 #              # Set energy range
-#              sidebarLayout(
-#              sidebarPanel(
-#                selectInput("Multipol2", "Multipolarity:", choices=c("M1", "M2", "E1", "E2"), selected="M1"),
-#                splitLayout(cellWidths = c("50%", "50%"),
-#                          numericInput(inputId = "E_min", label = "Min Energy (keV):", value=0),
-#                          numericInput(inputId = "E_max", label = "Max Energy (keV):", value=max(Gammas$Egam))),
-#                # select odd-odd, even-even, or all
-#                radioButtons(inputId="Mass_type", label="Type of Mass number?",
-#                           choices=c("Odd-Odd","Even-Even", "Odd Mass", "All"), selected="All"),
-#                # Set Mass range
-#                splitLayout(cellWidths = c("50%", "50%"),
-#                          numericInput(inputId = "M_min", label = "Lower Mass:", value=0),
-#                          numericInput(inputId = "M_max", label = "Upper Mass:", value=max(Gammas$M))),
-#                # set number of B-value bins
-#                numericInput(inputId = "K", label = "Number of B-value bins", value=50),
-#                actionButton("plotButton2", "PLOT and CALCULATE")
-#                ),
+#              # sidebarLayout(
+#              #   sidebarPanel(
+#                  selectInput("Multipol2", "Multipolarity:", choices=c("M1", "M2", "E1", "E2"), selected="M1"),
+#                  splitLayout(cellWidths = c("50%", "50%"),
+#                              numericInput(inputId = "E_min", label = "Min Energy (keV):", value=0),
+#                              numericInput(inputId = "E_max", label = "Max Energy (keV):", value=max(Gammas$Egam))),
+#                  # select odd-odd, even-even, or all
+#                  radioButtons(inputId="Mass_type", label="Type of Mass number?",
+#                               choices=c("Odd-Odd","Even-Even", "Odd Mass", "All"), selected="All"),
+#                  # Set Mass range
+#                  splitLayout(cellWidths = c("50%", "50%"),
+#                              numericInput(inputId = "M_min", label = "Lower Mass:", value=0),
+#                              numericInput(inputId = "M_max", label = "Upper Mass:", value=max(Gammas$M))),
+#                  # set number of B-value bins
+#                  numericInput(inputId = "K", label = "Number of B-value bins", value=50),
+#                  actionButton("plotButton2", "PLOT and CALCULATE"),
 # 
 # 
-#              mainPanel(
-#                plotOutput("plot2")
-#              )),
+# 
+#                #mainPanel(
+#                  imageOutput("plot2")
+#               # ),
 # 
 # 
 #     )
-#   )
-#   )
-
- #################### CARDS UI #################################################
-ui <- page_fillable(
-  #titlePanel("Gamma Ray Predictor"),
-    card(card_header("Explore"),
-             h3("Tab 1"),
-             p("The B value data is text scraped from the raw ENSDF database"),
-             #sidebarLayout(
-               #sidebarPanel(
-                 #selectInput("Multipol", "Multipolarity:", choices=levels(as.factor(Gammas$Mult_Single)), selected="M1"),
-                 selectInput("Multipol", "Multipolarity:", choices=c("M1", "M2", "E1", "E2"), selected="M1"),
-                 numericInput("N_Ebins", "Number of Energy Bins:", value = 7),
-                 actionButton("plotButton", "PLOT"),
-
-               #mainPanel(
-                 plotlyOutput("plot0"),
-                 plotlyOutput("plot")
-               #)
-             #),
-
-    ),
-
-    ## This tab filters based on selecting a mass range or input list of masses
-    card(card_header("Evaluate"),
-             h3("Tab 2"),
-             p("On th is tab you can filer all the B-value data and fit a logarithmic gaussian, giving you a very good idea of a starting point for any transition matrix element. This is much
-               better than using Weisskopf units on their own, as you are using a best educated guess fitted to all known transitions of the set type."),
-             # Set energy range
-             # sidebarLayout(
-             #   sidebarPanel(
-                 selectInput("Multipol2", "Multipolarity:", choices=c("M1", "M2", "E1", "E2"), selected="M1"),
-                 splitLayout(cellWidths = c("50%", "50%"),
-                             numericInput(inputId = "E_min", label = "Min Energy (keV):", value=0),
-                             numericInput(inputId = "E_max", label = "Max Energy (keV):", value=max(Gammas$Egam))),
-                 # select odd-odd, even-even, or all
-                 radioButtons(inputId="Mass_type", label="Type of Mass number?",
-                              choices=c("Odd-Odd","Even-Even", "Odd Mass", "All"), selected="All"),
-                 # Set Mass range
-                 splitLayout(cellWidths = c("50%", "50%"),
-                             numericInput(inputId = "M_min", label = "Lower Mass:", value=0),
-                             numericInput(inputId = "M_max", label = "Upper Mass:", value=max(Gammas$M))),
-                 # set number of B-value bins
-                 numericInput(inputId = "K", label = "Number of B-value bins", value=50),
-                 actionButton("plotButton2", "PLOT and CALCULATE"),
-
-
-
-               #mainPanel(
-                 imageOutput("plot2")
-              # ),
-
-
-    )
-
-)
+# 
+# )
 
 
 # ######################## Accordion UI  #########################################
@@ -131,31 +143,45 @@ ui <- page_fillable(
 #   sidebar = sidebar(
 #     bg = "white",
 #     accordion(
+#       
+#    # sidebar = sidebar(  
 #       accordion_panel(
 #         "Primary Controls",
 #         selectInput("Multipol", "Multipolarity:", choices=c("M1", "M2", "E1", "E2"), selected="M1"),
 #         numericInput("N_Ebins", "Number of Energy Bins:", value = 7),
 #         actionButton("plotButton", "PLOT")
+#         
+#       ),  
 #       ),
 #       accordion_panel(
-#         "Secondary Controls",
-#                          selectInput("Multipol2", "Multipolarity:", choices=c("M1", "M2", "E1", "E2"), selected="M1"),
-#                          splitLayout(cellWidths = c("50%", "50%"),
-#                                      numericInput(inputId = "E_min", label = "Min Energy (keV):", value=0),
-#                                      numericInput(inputId = "E_max", label = "Max Energy (keV):", value=max(Gammas$Egam))),
-#                          # select odd-odd, even-even, or all
-#                          radioButtons(inputId="Mass_type", label="Type of Mass number?",
-#                                       choices=c("Odd-Odd","Even-Even", "Odd Mass", "All"), selected="All"),
-#                          # Set Mass range
-#                          splitLayout(cellWidths = c("50%", "50%"),
-#                                      numericInput(inputId = "M_min", label = "Lower Mass:", value=0),
-#                                      numericInput(inputId = "M_max", label = "Upper Mass:", value=max(Gammas$M))),
-#                          # set number of B-value bins
-#                          numericInput(inputId = "K", label = "Number of B-value bins", value=50),
-#                          actionButton("plotButton2", "PLOT and CALCULATE")
-#       )
+#         "All data",
+#         #plotlyOutput("plot0")
+#         plotlyOutput("plot")
+#       ),
+#       # accordion_panel(
+#       #   "Secondary Controls",
+#       #                    selectInput("Multipol2", "Multipolarity:", choices=c("M1", "M2", "E1", "E2"), selected="M1"),
+#       #                    splitLayout(cellWidths = c("50%", "50%"),
+#       #                                numericInput(inputId = "E_min", label = "Min Energy (keV):", value=0),
+#       #                                numericInput(inputId = "E_max", label = "Max Energy (keV):", value=max(Gammas$Egam))),
+#       #                    # select odd-odd, even-even, or all
+#       #                    radioButtons(inputId="Mass_type", label="Type of Mass number?",
+#       #                                 choices=c("Odd-Odd","Even-Even", "Odd Mass", "All"), selected="All"),
+#       #                    # Set Mass range
+#       #                    splitLayout(cellWidths = c("50%", "50%"),
+#       #                                numericInput(inputId = "M_min", label = "Lower Mass:", value=0),
+#       #                                numericInput(inputId = "M_max", label = "Upper Mass:", value=max(Gammas$M))),
+#       #                    # set number of B-value bins
+#       #                    numericInput(inputId = "K", label = "Number of B-value bins", value=50),
+#       #                    actionButton("plotButton2", "PLOT and CALCULATE")
+#       # )
 #     )
-#   ),
+#     
+#     
+#     
+#     
+#     
+#   #),
 # 
 #   accordion(
 #     open = c("Bill Length", "About"),
@@ -175,43 +201,46 @@ ui <- page_fillable(
 server <- function(input, output) {
   
   ######### TAB 1 #####################
-  output$plot0 <- renderPlotly({
-  ######## PLot the 2D plot  ################
-  E.1 <- filter(Gammas, Mult_Single=="E1")
-  pE1 <- plot_ly(E.1, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="brown")) %>%
-    layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
-           yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
-           showlegend=T
-    )
-
-  E.2 <- filter(Gammas, Mult_Single=="E2")
-  pE2 <- plot_ly(E.2, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="orange")) %>%
-    layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
-           yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
-           showlegend=T
-    )
-
-
-  M.1 <- filter(Gammas, Mult_Single=="M1")
-  pM1 <- plot_ly(M.1, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="green")) %>%
-    layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
-           yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
-           showlegend=T
-    )
-
-  M.2 <- filter(Gammas, Mult_Single=="M2")
-  pM2 <- plot_ly(M.2, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="blue")) %>%
-    layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
-           yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
-           showlegend=T
-    )
-
-
-  all <- subplot(pE1, pE2, pM1, pM2, nrows=2, titleY=T, titleX=T, margin=0.035)
-  all
-
-  #end plot0
-  })
+  
+  
+  # output$plot0 <- renderPlotly({
+  # ######## PLot the 2D plot  ################
+  # E.1 <- filter(Gammas, Mult_Single=="E1")
+  # pE1 <- plot_ly(E.1, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="brown")) %>%
+  #   layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
+  #          yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
+  #          showlegend=T
+  #   )
+  # 
+  # E.2 <- filter(Gammas, Mult_Single=="E2")
+  # pE2 <- plot_ly(E.2, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="orange")) %>%
+  #   layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
+  #          yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
+  #          showlegend=T
+  #   )
+  # 
+  # 
+  # M.1 <- filter(Gammas, Mult_Single=="M1")
+  # pM1 <- plot_ly(M.1, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="green")) %>%
+  #   layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
+  #          yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
+  #          showlegend=T
+  #   )
+  # 
+  # M.2 <- filter(Gammas, Mult_Single=="M2")
+  # pM2 <- plot_ly(M.2, x =~Egam, y =~B, type="scatter", mode="markers", name=~Mult_Single, marker=list(color="blue")) %>%
+  #   layout(xaxis=list(title="Gamma Energy (keV)", exponentformat="E", type='log'),
+  #          yaxis=list(title="B (Weisskopf Units)", type='log', exponentformat="E"),
+  #          showlegend=T
+  #   )
+  # 
+  # 
+  # all <- subplot(pE1, pE2, pM1, pM2, nrows=2, titleY=T, titleX=T, margin=0.035)
+  # all
+  # 
+  # #end plot0
+  # })
+  
   
   ####### Plot the 3D plot ##################
   observeEvent(input$plotButton,{
@@ -367,7 +396,9 @@ server <- function(input, output) {
   
   #3D histogram
   output$plot <- renderPlotly({
-    fig <- plot_ly(showlegend=F, height="600")
+    #fig <- plot_ly(showlegend=F, height="600")
+    fig <- plot_ly(showlegend=F, height="500")
+    
     #fig <- plot_ly(showlegend=F)
     
     ### Draw the 3D bars
@@ -422,24 +453,32 @@ server <- function(input, output) {
   observeEvent(input$plotButton2,{
 
     TYPE <- input$Multipol2
-
-    Gammas_E <- filter(Gammas, Mult_Single == TYPE) %>%
-                filter(Egam >= input$E_min, Egam <= input$E_max) %>%
-                filter(M >= input$M_min, M <= input$M_max) %>%
-                mutate(log_B = log10(B))
-
-    Gammas_E$N <- Gammas_E$M - Gammas_E$Z
-
-    ### Odd/even mass filtering
-    # ## odd mass
-    # if((Gammas_E$M %% 2) !=0 ) {
-    #   Gammas_E <- filter(Gammas_E,  )
-    # ## or even even
-    # } else if ( ((Gammas_E$N %% 2) !=0) && ((Gammas_E$Z %% 2) != 0) ){
-    #
-    # ## or odd-odd
-    # } else if ( ((Gammas_E$N %% 2) ==0) && ((Gammas_E$Z %% 2) == 0)  )
-
+    
+    Gammas$N <- Gammas$M - Gammas$Z
+  
+    ## Odd/even mass filtering
+    if(input$Mass_type == "All"){
+      Gammas_M <- Gammas
+    } else if(input$Mass_type == "Odd-Mass"){
+      ## odd mass
+      Gammas_M <- filter(Gammas, (M %% 2) != 0)
+    } else if(input$Mass_type == "Even-Mass"){
+      ## even mass
+      Gammas_M <- filter(Gammas, (M %% 2) == 0)
+    } else if(input$Mass_type == "Odd-Odd"){
+      ## odd - odd 
+      Gammas_M <- filter(Gammas, (N %% 2) != 0, (Z %% 2) != 0)
+    } else if(input$Mass_type == "Even-Even"){
+      ## Even - Even
+      Gammas_M <- filter(Gammas, (N %% 2) == 0, (Z %% 2) == 0)
+    }
+    
+    Gammas_E <- filter(Gammas_M, Mult_Single == TYPE) %>%
+      filter(Egam >= input$E_min, Egam <= input$E_max) %>%
+      filter(M >= input$M_min, M <= input$M_max) %>%
+      mutate(log_B = log10(B))
+   
+    
     #K <- round(1+3.322*log10(nrow(Gammas_E)))
     K <- input$K ## Set manually
     h <- hist(Gammas_E$log_B, breaks = "FD", plot=FALSE)
@@ -508,17 +547,7 @@ server <- function(input, output) {
         list(src = img, width = 500, height = 500)
       }, deleteFile = TRUE)  
       
-      # ## Final plotting
-      # h <- hist(Gammas_E$log_B, breaks = "FD", xlab="Log(B-value, w.u.)",
-      #           main ="Histogram and Gaussian fit of logarthmic B-values")
-      # lines(xvals, yvals)
-      # mean_string <- paste("Mean is:", signif(10^optim_mean_logB, 3), " w.u.")
-      # text(0.7*min(Gammas_E$log_B), max(h$counts), mean_string)
-      # sd_string <- paste0("sd is: +/- log(", signif(10^optim_sd_logB, 3), ") w.u.")
-      # text(0.7*min(Gammas_E$log_B), 0.9*max(h$counts), sd_string)
-      
-      #ggplot(Gammas_E, aes(x=Gammas_E$log_B), height=100, width=100) + geom_histogram()
-
+    
 
     # p2 <- plot_ly(Gammas_E, x=~log_B, type="histogram", nbinsx=round(K))%>%
     #   layout(

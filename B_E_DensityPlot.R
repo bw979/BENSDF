@@ -85,9 +85,30 @@ if(TYPE=="M1"){
     K <- 30
 }
 
-Gammas_E <- filter(Gammas, Mult_Single == TYPE) %>%
-  mutate(log_B = log(B))
+# Gammas_E <- filter(Gammas, Mult_Single == TYPE) %>%
+#   mutate(log_B = log(B))
 
+
+Gammas$N <- Gammas$M - Gammas$Z
+
+#### Filtering odd-odd, even-even etc. ##############
+Gammas_E <- filter(Gammas, Mult_Single == TYPE) %>%
+  # filter(Egam >= input$E_min, Egam <= input$E_max) %>%
+  # filter(M >= input$M_min, M <= input$M_max) %>%
+  mutate(log_B = log10(B))
+
+# ## Odd/even mass filtering
+# ## odd mass
+# Gammas_E <- filter(Gammas, (M %% 2) != 0)
+# 
+# ## even mass
+# Gammas_E <- filter(Gammas, (M %% 2) == 0)
+# 
+# ## odd - odd 
+# Gammas_E <- filter(Gammas, (N %% 2) != 0, (Z %% 2) != 0)
+# 
+# ## Even - Even
+# Gammas_E <- filter(Gammas, (N %% 2) == 0, (Z %% 2) == 0)
 
 
 ################################################################################ 
