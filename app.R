@@ -24,7 +24,8 @@ ui <- page_fillable(
     accordion_panel("Explore",
   #tabsetPanel(
   #  tabPanel("Explore",
-             p("Filter the BENSDF Gamma database for the most common multipolarities and select number of energy bins for the 3D histogram.
+             p("Filter the BENSDF Gamma database for the most common multipolarities and select number of energy bins for the 3D histogram (please wait about a minute for it to load once you have clicked 'PLOT'. 
+             You can use the 'Explore' tab to ascertain a good energy region to fit a single histogram to in the 'Evaluate' tab). 
                The B-value data is text scraped from the raw ENSDF database."),
              sidebarLayout(
                sidebarPanel(
@@ -36,7 +37,13 @@ ui <- page_fillable(
                ),
                mainPanel(
                  #plotlyOutput("plot0"),
-                 plotlyOutput("plot")
+                 plotlyOutput("plot"),
+                 p("......................................................................................
+                   .......................................................................................
+                   .......................................................................................
+                   .......................................................................................
+                   .......................................................................................
+                   .......................................................................................")
                )
               ),
     ## close first accordion panel         
